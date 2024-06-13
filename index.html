@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+   
+  <meta charset="utf-8">
+  <title>熊出没クマったな</title>
+  <link rel="icon" type="image/x-icon" href="/img/favicon.ico">
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+   
+
+    #menu {
+      position: absolute;
+      z-index: 1; /* 地図の上にメニューを表示 */
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      background-color: #f0f0f0;
+      padding: 10px;
+    }
+
+    #map-container {
+      flex: 1;
+      position: relative;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+
+    .icon {
+      width: 30px;
+      height: 30px;
+      margin-right: 10px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+    <div id="menu">
+        <img src="img/footprint.jpeg" class="icon" onclick="addMarker('img/footprint_icon.png')">
+        <img src="img/poop.jpg" class="icon" onclick="addMarker('img/poop_icon.png')">
+        <img src="img/sighting.jpeg" class="icon" onclick="addMarker('img/sighting_icon.png')">
+      </div>
+
+  <!-- MapArea -->
+  <div id="view"></div>
+  <div id="myMap" style="width:50%;height:50%;"></div>
+  <!-- /MapArea -->
+
+<div id="map-container">
+  <div id="map"></div>
+</div>
+
+  <!-- jQuery&GoogleMapsAPI -->
+  <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+  <script src="https://www.bing.com/api/maps/mapcontrol?callback=GetMap&key=" async defer></script>
+  <script src="js/BmapQuery.js"></script>
+  <script>
+
+  let map;
+
+  function mapsInit(position) {
+    const lat = position.coords.latitude;
+    const lon = position.coords.longitude;
+
+    map = new Bmap("#map");
+    map.startMap(lat, lon, "load", 20);
+  };
+
+  function mapsError(error) {
+    let e = "";
+    if (error.code == 1) {
+      e = "位置情報が許可されてません";
+    }
+    if (error.code == 2) {
+      e = "現在位置を特定できません";
+    }
+    if (error.code == 3) {
+      e = "位置情報を取得する前にタイムアウトになりました";
+    }
+    alert("エラー：" + e);
+  };
+
+  const set = {
+    enableHighAccuracy: true,
+    maximumAge: 20000,
+    timeout: 10000
+  };
+
+  function GetMap() {
+    navigator.geolocation.getCurrentPosition(mapsInit, mapsError, set);
+  }
+
+  function addMarker(iconPath) {
+    navigator.geolocation.getCurrentPosition(function (position) {
+      const lat = position.coords.latitude;
+      const lon = position.coords.longitude;
+      const currentDate = new Date().toLocaleString();
+
+      // 1. マップ上にアイコンを表示
+      let icon = new Bmap.Icon(iconPath, new Bmap.Size(32, 32)); // アイコンのパスを使用
+      let marker = new Bmap.Marker(new Bmap.Point(lon, lat), { icon: icon });
+      map.map.addOverlay(marker);
+
+      // 2. データを保存
+      const pinData = {
+        iconType: iconType,
+        datetime: currentDate,
+        latitude: lat,
+        longitude: lon
+      };
+      savePinData(pinData);
+
+      // 3. ピンが置かれた日時を表示
+      displayPinData();
+    }, mapsError, set);
+  }
+</script>
+</body>
+</html>
